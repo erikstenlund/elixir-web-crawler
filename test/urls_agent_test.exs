@@ -5,11 +5,18 @@ defmodule UrlsAgentTest do
 
   doctest UrlsAgent
 
-  test "add url and get from agent" do
-    {:ok, pid} = start_link
-    assert add_url("www.foo.com", pid) == :added
-    assert add_url("www.foo.com", pid) == :duplicate
-    assert get_url(pid) == "www.foo.com"
-    assert get_url(pid) == nil 
+  setup_all do
+    start_link
+    :ok
   end
+
+  test "add url" do
+    assert add_url("www.foo.com") == :added
+    assert add_url("www.foo.com") == :duplicate
+  end
+
+  test "get url" do
+    assert get_urls == ["www.foo.com"]
+  end
+
 end

@@ -1,13 +1,25 @@
 defmodule WebCrawler do
+
   def crawl(url) do
-    {:ok, pid} = UrlsAgent.start_link
-    pid_1 = spawn(__MODULE__, :crawlUrl, ["www.foo.com", pid])
-    pid_2 = spawn(__MODULE__, :crawlUrl, ["www.bar.com", pid])
-    pid_3 = spawn(__MODULE__, :crawlUrl, ["www.foo.com", pid])
-    pid_4 = spawn(__MODULE__, :crawlUrl, ["www.blinkenlights.nl", pid])
+    UrlsAgent.start_link
+    crawlUrl(url)
+    #UrlsAgent.get_urls
   end
 
-  def crawlUrl(url, pid) do
-    UrlsAgent.add_url url, pid
+  def crawlUrl(url) do
+    urls = HTMLParser.parse(url)
+    tasks = []
+    
+    Enum.map(urls, fn(url) ->
+      url_list = UrlsAgent.get_urls
+      unless Enum.member?(url_list, url) do
+        tasks ++ [Task.async(__MODULE__, :crawlUrl, [url])]
+        UrlsAgent.add_url(url) 
+      end
+    end)
+
+    Enum.map(tasks, fn(task) ->
+      Task.await(task, :infinity)
+    end)
   end
 end
